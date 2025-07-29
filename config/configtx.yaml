@@ -1,0 +1,131 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: /opt/home/orderer/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')" # Members can read channel data
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')" # Members can write config
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')" # Only admins can administer org
+
+  - &Org1
+    Name: Org1
+    ID: Org1MSP
+    MSPDir: /opt/home/root/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org1MSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('Org1MSP.peer')"
+    AnchorPeers:
+      - Host: peer0.org1.example.com
+        Port: 7051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Orderer: &OrdererDefaults
+  OrdererType: solo
+  Addresses:
+    - orderer.example.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers" # Who must sign blocks for them to be valid
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins" # Change back to MAJORITY when having multiple orgs
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins" # Change back to MAJORITY when having multiple orgs
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Profiles:
+  GenesisProfile:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *Org1
+
+  FabricProfile:
+    Consortium: SampleConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Org1
+      Capabilities: *ApplicationCapabilities

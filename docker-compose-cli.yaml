@@ -1,0 +1,29 @@
+networks:
+  fabric:
+    external: true
+
+services:
+  cli:
+    image: hyperledger/fabric-tools:2.2.4
+    container_name: cli
+    tty: true
+    working_dir: /opt/home
+    environment:
+      - FABRIC_CFG_PATH=/opt/home/config
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric
+    volumes:
+      - /var/run/:/host/var/run
+      
+      - ./config:/opt/home/config # Configs
+      - ./artifacts:/opt/home/artifacts # Artifacts
+      - ./chaincode:/opt/home/chaincode # Chaincode
+
+      - ./crypto/peerOrganizations/org1.example.com/msp:/opt/home/root/msp # Root Org MSP
+      - ./crypto/peerOrganizations/org1.example.com/peers:/opt/home/peers # Peers
+      - ./crypto/peerOrganizations/org1.example.com/users:/opt/home/users # Users
+      - ./crypto/ordererOrganizations/example.com/orderers/orderer.example.com:/opt/home/orderer # Orderer
+    networks:
+      - fabric

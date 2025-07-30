@@ -8,6 +8,6 @@ PeerOrgs:
   - Name: Org1
     Domain: org1.example.com
     Template:
-      Count: 1      # Increase number of peers in production.
+      Count: 2      # Increase number of peers in production.
     Users:
       Count: 3

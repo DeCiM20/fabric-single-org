@@ -14,12 +14,12 @@ function package() {
 
 # Install chaincode on --peerAddresses
 function install() {
-    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode install ${PKG_PATH} --peerAddresses peer0.org1.example.com:7051 # --tls --cafile /opt/home/peer/tls/ca.crt
+    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode install ${PKG_PATH} --peerAddresses peer0.org1.example.com:7051
 }
 
 # List of installed chaincodes
 function installed() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryinstalled" # --tls --cafile /opt/home/peer/tls/ca.crt
+    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryinstalled"
     echo "Running: $cmd"
     eval "$cmd"
 }
@@ -32,21 +32,21 @@ function approve() {
 
 # Chaincode approval details
 function approved() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryapproved --channelID my-channel --name test-contract-2 --output json" # --tls --cafile /opt/home/peer/tls/ca.crt
+    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryapproved --channelID my-channel --name test-contract-2 --output json"
     echo "Running: $cmd"
     eval "$cmd"
 }
 
 # Check commit readiness (Check for approvals)
 function readiness() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode checkcommitreadiness --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1 --output json" # --tls --cafile /opt/home/peer/tls/ca.crt
+    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode checkcommitreadiness --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1 --output json"
     echo "Running: $cmd"
     eval "$cmd"
 }
 
 # Commit chaincode to orderer
 function commit() {
-    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1 # --tls --cafile /opt/home/peer/tls/ca.crt
+    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1
 }
 
 # Help message

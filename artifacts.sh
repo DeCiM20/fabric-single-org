@@ -15,8 +15,8 @@ function generate() {
   echo "📦 Creating channel transaction..."
   docker exec cli configtxgen -profile $CHANNEL_PROFILE -outputCreateChannelTx /opt/home/artifacts/${CHANNEL_NAME}.tx -channelID $CHANNEL_NAME
 
-  echo "🌐 Generating anchor peer update for Org1"
-  docker exec cli configtxgen -profile $CHANNEL_PROFILE -outputAnchorPeersUpdate /opt/home/artifacts/Org1anchors.tx -channelID $CHANNEL_NAME -asOrg Org1
+  # echo "🌐 Generating anchor peer update for Org1"
+  # docker exec cli configtxgen -profile $CHANNEL_PROFILE -outputAnchorPeersUpdate /opt/home/artifacts/Org1anchors.tx -channelID $CHANNEL_NAME -asOrg Org1
 }
 
 generate

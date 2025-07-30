@@ -28,6 +28,9 @@ Organizations:
       Admins:
         Type: Signature
         Rule: "OR('Org1MSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('Org1MSP.member')" # Who can endorse chaincode functions and lifecycle commands
     AnchorPeers:
       - Host: peer0.org1.example.com
         Port: 7051
@@ -76,12 +79,6 @@ Channel: &ChannelDefaults
     Admins:
       Type: ImplicitMeta
       Rule: "ANY Admins" # Change back to MAJORITY when having multiple orgs
-    LifecycleEndorsement:
-      Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
-    Endorsement:
-      Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
   Capabilities:
     <<: *ChannelCapabilities
 

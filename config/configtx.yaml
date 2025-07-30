@@ -17,7 +17,7 @@ Organizations:
   - &Org1
     Name: Org1
     ID: Org1MSP
-    MSPDir: /opt/home/root/msp
+    MSPDir: /opt/home/org1/root/msp
     Policies:
       Readers:
         Type: Signature
@@ -31,6 +31,24 @@ Organizations:
     AnchorPeers:
       - Host: peer0.org1.example.com
         Port: 7051
+
+  - &Org2
+    Name: Org2
+    ID: Org2MSP
+    MSPDir: /opt/home/org2/root/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org2MSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org2MSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org2MSP.admin')"
+    AnchorPeers:
+      - Host: peer0.org2.example.com
+        Port: 8051
 
 Capabilities:
   Channel: &ChannelCapabilities
@@ -75,13 +93,7 @@ Channel: &ChannelDefaults
       Rule: "ANY Writers"
     Admins:
       Type: ImplicitMeta
-      Rule: "ANY Admins" # Change back to MAJORITY when having multiple orgs
-    LifecycleEndorsement:
-      Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
-    Endorsement:
-      Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+      Rule: "MAJORITY Admins" # Change back to MAJORITY when having multiple orgs
   Capabilities:
     <<: *ChannelCapabilities
 
@@ -96,13 +108,13 @@ Application: &ApplicationDefaults
       Rule: "ANY Writers"
     Admins:
       Type: ImplicitMeta
-      Rule: "ANY Admins" # Change back to MAJORITY when having multiple orgs
+      Rule: "MAJORITY Admins" # Change back to MAJORITY when having multiple orgs
     LifecycleEndorsement:
       Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+      Rule: "MAJORITY Endorsement" # Change back to MAJORITY when having multiple orgs
     Endorsement:
       Type: ImplicitMeta
-      Rule: "ANY Endorsement" # Change back to MAJORITY when having multiple orgs
+      Rule: "MAJORITY Endorsement" # Change back to MAJORITY when having multiple orgs
   Capabilities:
     <<: *ApplicationCapabilities
 
@@ -117,6 +129,7 @@ Profiles:
       SampleConsortium:
         Organizations:
           - *Org1
+          - *Org2
 
   FabricProfile:
     Consortium: SampleConsortium
@@ -125,4 +138,5 @@ Profiles:
       <<: *ApplicationDefaults
       Organizations:
         - *Org1
+        - *Org2
       Capabilities: *ApplicationCapabilities

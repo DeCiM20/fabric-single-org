@@ -10,8 +10,6 @@ services:
     working_dir: /opt/home
     environment:
       - FABRIC_CFG_PATH=/opt/home/config
-      - CORE_PEER_LOCALMSPID=Org1MSP
-      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric
     volumes:
@@ -21,9 +19,14 @@ services:
       - ./artifacts:/opt/home/artifacts # Artifacts
       - ./chaincode:/opt/home/chaincode # Chaincode
 
-      - ./crypto/peerOrganizations/org1.example.com/msp:/opt/home/root/msp # Root Org MSP
-      - ./crypto/peerOrganizations/org1.example.com/peers:/opt/home/peers # Peers
-      - ./crypto/peerOrganizations/org1.example.com/users:/opt/home/users # Users
       - ./crypto/ordererOrganizations/example.com/orderers/orderer.example.com:/opt/home/orderer # Orderer
+
+      - ./crypto/peerOrganizations/org1.example.com/msp:/opt/home/org1/root/msp # Root Org1 MSP
+      - ./crypto/peerOrganizations/org1.example.com/peers:/opt/home/org1/peers # Peers
+      - ./crypto/peerOrganizations/org1.example.com/users:/opt/home/org1/users # Users
+
+      - ./crypto/peerOrganizations/org2.example.com/msp:/opt/home/org2/root/msp # Root Org2 MSP
+      - ./crypto/peerOrganizations/org2.example.com/peers:/opt/home/org2/peers # Peers
+      - ./crypto/peerOrganizations/org2.example.com/users:/opt/home/org2/users # Users
     networks:
       - fabric

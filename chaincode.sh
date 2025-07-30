@@ -1,88 +1,82 @@
 #!/bin/bash
-
 set -e
 
-export FABRIC_CFG_PATH=$PWD/config
+# Usage:
+#   $0 {package|install|installed|approve|approved|readiness|commit} <ORG_NUMBER> [PACKAGE_ID]
+if [ $# -lt 2 ]; then
+  echo "❌ Usage: $0 {package|install|installed|approve|approved|readiness|commit} <ORG_NUMBER> [PACKAGE_ID]"
+  exit 1
+fi
+
+CMD="$1"; shift
+ORG="$1"; shift
+
+# Calculate peer port: Org1=7051, Org2=8051, Org3=9051, etc.
+calc_peer_port() {
+  local org="$1"
+  echo $((7051 + (org - 1) * 1000))
+}
+
+# Common environment for peer CLI
+PORT=$(calc_peer_port "$ORG")
+PEER_ADDRESS="peer0.org${ORG}.example.com:${PORT}" # Peer with the chaincode
+
+# MSP envs
+CORE_PEER_MSPCONFIGPATH="/opt/home/org$ORG/users/Admin@org${ORG}.example.com/msp"
+CORE_PEER_ADDRESS="peer0.org$ORG.example.com:${PORT}"
+CORE_PEER_LOCALMSPID="Org${ORG}MSP"
+  
+
+# Fixed chaincode parameters
 PKG_PATH="/opt/home/chaincode/packaged/test-contract-2_1.0.0.tar.gz"
 RAW_PATH="/opt/home/chaincode/raw/golang/test-contract-2"
-CORE_PEER_MSPCONFIGPATH=/opt/home/users/Admin@org1.example.com/msp
+CHANNEL="my-channel"
+NAME="test-contract-2"
+VERSION="1.0.0"
+SEQUENCE=1
 
-# Package chaincode
 function package() {
-    docker exec cli peer lifecycle chaincode package ${PKG_PATH} --path ${RAW_PATH} --lang golang --label test-contract-2_1.0.0
+  docker exec ${CLI_CONTAINER} peer lifecycle chaincode package ${PKG_PATH} --path ${RAW_PATH} --lang golang --label ${NAME}_${VERSION}
 }
 
-# Install chaincode on --peerAddresses
 function install() {
-    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode install ${PKG_PATH} --peerAddresses peer0.org1.example.com:7051 # --tls --cafile /opt/home/peer/tls/ca.crt
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode install ${PKG_PATH} --peerAddresses ${PEER_ADDRESS}
 }
 
-# List of installed chaincodes
 function installed() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryinstalled" # --tls --cafile /opt/home/peer/tls/ca.crt
-    echo "Running: $cmd"
-    eval "$cmd"
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryinstalled
 }
 
-# Approve the chaincode
 function approve() {
-    PKG_ID=$1
-    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode approveformyorg -o orderer.example.com:7050 --channelID my-channel --name test-contract-2 --version 1.0.0 --package-id ${PKG_ID} --sequence 1 --peerAddresses peer0.org1.example.com:7051
+  local PKG_ID="$1"
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode approveformyorg -o orderer.example.com:7050 --channelID ${CHANNEL} --name ${NAME} --version ${VERSION} --package-id ${PKG_ID} --sequence ${SEQUENCE} --peerAddresses ${PEER_ADDRESS}
 }
 
-# Chaincode approval details
 function approved() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryapproved --channelID my-channel --name test-contract-2 --output json" # --tls --cafile /opt/home/peer/tls/ca.crt
-    echo "Running: $cmd"
-    eval "$cmd"
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode queryapproved --channelID ${CHANNEL} --name ${NAME} --output json
 }
 
-# Check commit readiness (Check for approvals)
 function readiness() {
-    local cmd="docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode checkcommitreadiness --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1 --output json" # --tls --cafile /opt/home/peer/tls/ca.crt
-    echo "Running: $cmd"
-    eval "$cmd"
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode checkcommitreadiness --channelID ${CHANNEL} --name ${NAME} --version ${VERSION} --sequence ${SEQUENCE} --output json
 }
 
-# Commit chaincode to orderer
 function commit() {
-    docker exec -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID my-channel --name test-contract-2 --version 1.0.0 --sequence 1 # --tls --cafile /opt/home/peer/tls/ca.crt
+  docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID -e CORE_PEER_ADDRESS=$CORE_PEER_ADDRESS -e CORE_PEER_MSPCONFIGPATH=$CORE_PEER_MSPCONFIGPATH cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID ${CHANNEL} --name ${NAME} --version ${VERSION} --sequence ${SEQUENCE} --peerAddresses ${PEER_ADDRESS}
 }
 
-# Help message
-function help() {
-    echo "Usage: $0 {package|install|approve|commit} [args]"
-    echo "  package                  Package the chaincode"
-    echo "  install                  Install the chaincode"
-    echo "  approve <package_id>     Approve chaincode for org"
-    echo "  commit                   Commit the chaincode"
+# Dispatch
+case "${CMD}" in
+  package|install|installed|approved|readiness|commit)
+    $CMD ${1:+$1}
+    ;;
+  approve)
+    # approve needs PACKAGE_ID as $1
+    [ -n "$1" ] || { echo "❌ approve requires <PACKAGE_ID>"; exit 1; }
+    approve "$1"
+    ;;
+  *)
+    echo "❌ Unknown command: ${CMD}" >&2
+    echo "Usage: $0 {package|install|installed|approve|approved|readiness|commit} <ORG_NUMBER> [PACKAGE_ID]"
     exit 1
-}
-
-# Entry point
-case "$1" in
-    package)
-        package
-        ;;
-    install)
-        install
-        ;;
-    installed)
-        installed
-        ;;
-    approve)
-        approve "$2"
-        ;;
-    approved)
-        approved
-        ;;
-    readiness)
-        readiness
-        ;;
-    commit)
-        commit
-        ;;
-    *)
-        help
-        ;;
+    ;;
 esac

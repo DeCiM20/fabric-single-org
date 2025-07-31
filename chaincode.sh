@@ -25,7 +25,7 @@ PEER_ADDRESS="peer0.org${ORG}.example.com:${PORT}" # Peer with the chaincode
 CORE_PEER_MSPCONFIGPATH="/opt/home/org$ORG/users/Admin@org${ORG}.example.com/msp"
 CORE_PEER_ADDRESS="peer0.org$ORG.example.com:${PORT}"
 CORE_PEER_LOCALMSPID="Org${ORG}MSP"
-  
+
 
 # Fixed chaincode parameters
 PKG_PATH="/opt/home/chaincode/packaged/test-contract-2_1.0.0.tar.gz"
@@ -63,7 +63,7 @@ function readiness() {
 }
 
 function commit() {
-  docker exec $ENV cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID ${CHANNEL} --name ${NAME} --version ${VERSION} --sequence ${SEQUENCE} --peerAddresses ${PEER_ADDRESS}
+  docker exec $ENV cli peer lifecycle chaincode commit -o orderer.example.com:7050 --channelID ${CHANNEL} --name ${NAME} --version ${VERSION} --sequence ${SEQUENCE} --peerAddresses peer0.org1.example.com:7051 --peerAddresses peer0.org2.example.com:8051
 }
 
 # Dispatch
